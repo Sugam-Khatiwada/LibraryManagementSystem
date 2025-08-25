@@ -2,41 +2,50 @@ import Borrow from '../models/borrow.js';
 import Book from '../models/book.js';
 
 export const borrowBook = async (req, res) => {
-    try{
-        const userId = req.user._id;
-        const {bookId}=req.body;
-        if(!bookId) {
-            return res.status(400).json({ message: "Book ID is required" });
-        }
-        const book = await Book.findById(bookId);
-        if (!book) {
-            return res.status(404).json({ message: "Book not found" });
-        }
-        if (book.availableBooks <= 0) {
-            return res.status(400).json({ message: "No copies available for borrowing" });
-        }
-        const existingBorrow = await Borrow.findOne({
-            userId,
-            bookId,
-            returnDate: null
-        })
-        if (existingBorrow) {
-            return res.status(400).json({ message: "You have already borrowed this book" });
-        }
-        const newBorrow = new Borrow({
-            userId,
-            bookId,
-            
-        });
-        await newBorrow.save();
-        book.availableBooks -=1;
-        await book.save();
-        res.status(201).json({ message: "Book borrowed successfully", borrow: newBorrow });
-    } catch (error) {
-        console.error("Error borrowing book:", error);
-        res.status(500).json({ message: "Internal Server Error" });
+  try {
+    const userId = req.user.id; 
+    const { bookId } = req.body;
+
+    if (!bookId) {
+      return res.status(400).json({ message: "Book ID is required" });
     }
-}
+    const book = await Book.findById(bookId);
+    if (!book) {
+      return res.status(404).json({ message: "Book not found" });
+    }
+    if (book.availableBooks <= 0) {
+      return res
+        .status(400)
+        .json({ message: "No available copies of the book" });
+    }
+    const existingBorrow = await Borrow.findOne({
+      userId,
+      bookId,
+    });
+    if (existingBorrow) {
+      return res
+        .status(400)
+        .json({ message: "You have already borrowed this book" });
+    }
+
+    const newBorrow = new Borrow({
+      userId,
+      bookId,
+    });
+
+    await newBorrow.save();
+
+    book.availableBooks -= 1;
+    await book.save();
+
+    res
+      .status(201)
+      .json({ message: "Book borrowed successfully", borrow: newBorrow });
+  } catch (error) {
+    console.error("Error borrowing book:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 export const returnBook = async (req, res) => {
     try{
@@ -78,3 +87,38 @@ export const borrowHistory = async (req, res) => {
     }
 }
 
+export const updateBorrower = async (req, res) => {
+  try {
+    const { borrowerId } = req.params;
+    const updates = req.body;
+
+    const updatedBorrower = await Borrow.findByIdAndUpdate(borrowerId, updates, {
+      new: true,
+    });
+
+    if (!updatedBorrower) {
+      return res.status(404).json({ message: "Borrower not found" });
+    }
+
+    res.status(200).json({ message: "Borrower updated successfully", borrower: updatedBorrower });
+  } catch (error) {
+    console.error("Error updating borrower:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+export const deleteBorrower = async (req, res) => {
+  try {
+    const { borrowerId } = req.params;
+
+    const deletedBorrower = await Borrow.findByIdAndDelete(borrowerId);
+
+    if (!deletedBorrower) {
+      return res.status(404).json({ message: "Borrower not found" });
+    }
+
+    res.status(200).json({ message: "Borrower deleted successfully", borrower: deletedBorrower });
+  } catch (error) {
+    console.error("Error deleting borrower:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

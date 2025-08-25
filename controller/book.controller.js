@@ -11,10 +11,10 @@ export const createBook = async (req, res) => {
         }
         if(quantity <= 0 || availableBooks <= 0) {
             return res.status(400).json({ message: "Quantity and Available Books cannot be negative" });
-
-        if(quantity < availableBooks) {
-            return res.status(400).json({ message: "Available Books cannot exceed Quantity" });
         }
+        // if(quantity < availableBooks) {
+        //     return res.status(400).json({ message: "Available Books cannot exceed Quantity" });
+        // }
         const newBook = new Book({
             title,
             author,
@@ -24,7 +24,7 @@ export const createBook = async (req, res) => {
         });
         await newBook.save();
         res.status(201).json({ message: "Book created successfully", book: newBook });
-    }
+    // ...existing code...
     }catch (error) {
         console.error("Error creating book:", error);
         res.status(500).json({ message: "Internal Server Error" });

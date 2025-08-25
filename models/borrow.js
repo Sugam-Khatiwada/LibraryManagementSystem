@@ -20,8 +20,7 @@ const userSchema = new mongoose.Schema({
     },
     returnDate: {
         type: Date,
-        required: true,
-        default: null,
+      
         description: "Date when the book is expected to be returned",
     },
     createdAt: {
