@@ -122,3 +122,13 @@ export const deleteBorrower = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export const getAllBorrowers = async (req, res) => {
+  try {
+    const borrowers = await Borrow.find().populate('userId', 'name email').populate('bookId', 'title author');
+    res.status(200).json({ message: "All borrowers retrieved successfully", borrowers });
+  } catch (error) {
+    console.error("Error retrieving all borrowers:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

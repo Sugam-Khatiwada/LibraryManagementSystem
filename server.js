@@ -4,18 +4,25 @@ import connectDB  from './config/database.js';
 import router from './routes/book.route.js';
 import authRouter from './routes/auth.route.js';
 import borrowerRouter from './routes/borrower.route.js';
-
+import cors from 'cors';
 dotenv.config();
+
 
 const app = express();
 app.use(express.json());
+app.use(cors({
+    origin:"*",
+    methods:["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true
+}))
 
 app.use('/api', router);
 app.use('/api', authRouter);
 app.use('/api', borrowerRouter);
 
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8000;
 
 connectDB();
 
