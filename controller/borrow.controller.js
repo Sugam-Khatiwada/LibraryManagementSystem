@@ -47,34 +47,49 @@ export const borrowBook = async (req, res) => {
   }
 };
 
+// controllers/borrowController.js (replace returnBook)
 export const returnBook = async (req, res) => {
-    try{
-        const {borrowId} = req.params;
-        const borrow = await Borrow.findById(borrowId);
-        if (!borrow) {
-            return res.status(404).json({ message: "Borrow record not found" });
-        }
-        if(borrow.returnDate !== null) {
-            return res.status(400).json({ message: "Book has already been returned" });
-        }
-        borrow.returnDate = Date.now();
-        await borrow.save();
-
-        const book = await Book.findById(borrow.bookId);
-        if(book) {
-            book.availableBooks += 1;
-            await book.save();
-        }
-        res.status(200).json({ message: "Book returned successfully", borrow });
-    }catch (error) {
-        console.error("Error returning book:", error);
-        res.status(500).json({ message: "Internal Server Error" });
+  try {
+    const { borrowId } = req.params;
+    const borrow = await Borrow.findById(borrowId);
+    if (!borrow) {
+      return res.status(404).json({ message: "Borrow record not found" });
     }
-}
+
+    // Detect existing return in a tolerant way (handles undefined/null and various field names)
+    const existingReturn =
+      borrow.returnDate ?? borrow.returnedAt ?? borrow.returned_at ?? borrow.return_date ?? null;
+
+    if (existingReturn != null) {
+      // Idempotent: return success with the borrow record so client can read the timestamp
+      return res.status(200).json({ message: "Book already returned", borrow });
+    }
+
+    // Mark as returned (set common return fields)
+    const now = new Date();
+    borrow.returnDate = now;
+    borrow.returnedAt = now;
+    // optionally borrow.returned = true; if you track a boolean
+
+    await borrow.save();
+
+    const book = await Book.findById(borrow.bookId);
+    if (book) {
+      // guard against NaN / missing value
+      book.availableBooks = (Number(book.availableBooks) || 0) + 1;
+      await book.save();
+    }
+
+    return res.status(200).json({ message: "Book returned successfully", borrow });
+  } catch (error) {
+    console.error("Error returning book:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
 
 export const borrowHistory = async (req, res) => {
     try{
-        const userId = req.user._id;
+        const userId = req.user.id;
         const borrows = await Borrow.find({ userId }).populate('bookId', 'title author isbn');
         if (borrows.length === 0) {
             return res.status(404).json({ message: "No borrow records found for this user" });

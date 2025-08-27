@@ -6,7 +6,7 @@ import { authorizationRoles, verifyToken } from '../middleware/verifytoken.js';
 const router = express.Router();
 
 router.post('/books', verifyToken, authorizationRoles('Librarian'), createBook);
-router.get('/books', verifyToken, authorizationRoles('Librarian'), getAllBooks);
+router.get('/books',  getAllBooks);
 router.get('/books/:isbn', verifyToken, authorizationRoles('Librarian'), getBookByIsbn);
 router.put('/books/:isbn', verifyToken, authorizationRoles('Librarian'), updateBook);
 router.delete('/books/:isbn', verifyToken, authorizationRoles('Librarian'), deleteBook);
