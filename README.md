@@ -68,5 +68,3 @@ Adjust exact route prefixes if your router mounts differ.
 - Add tests for `createBook`, `borrowBook` and auth flows.
 - Validate request payloads with a library like `joi` or `express-validator`.
 
-## License
-MIT
